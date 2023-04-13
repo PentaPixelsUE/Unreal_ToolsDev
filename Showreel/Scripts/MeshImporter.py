@@ -4,56 +4,72 @@ import unreal as ue
 
 
 
-# def SetImportTasks(filename,destination_path,options=None):
-#     task_properties = {
-#         "async_": True,
-#         "destination_name": "",
-#         "destination_path": destination_path,
-#         "filename": filename,
-#         "replace_existing": True,
-#         "save": True,
-#         "options": True,
-#     }
-#     task = ue.AssetImportTask()
-#     for prop, value in task_properties.items():
-#         setattr(task, f"set_editor_property_{prop}", value)
 
-#     return task
+                
 
-# def SetStaticMeshData():
-#     ui = ue.FbxImportUI()
 
-#     properties = {
-#         'import_mesh': True,
-#         'import_as_skeletal': False,
-#         'import_materials': True,
-#         'import_textures': False,
-#     }
-#     ui.set_editor_properties(properties)
+def staticmeshimportparams(Fbx_static_mesh_import_data):
+    ui_import= ue.FbxImportUI()
+    task_properties = {
+        'import_mesh': True,
+        'import_as_skeletal': False,
+        'import_materials': True,
+        'import_textures': False,
+        'static_mesh_import_data':Fbx_static_mesh_import_data
+    }
+    ui_import.set_editor_properties(task_properties)
+    return ui_import
 
-#     import_data = {
-#         'import_translation': ue.Vector(50, 0.0, 0.0),
-#         'import_rotation': ue.Rotator(0.0, 0.0, 0.0),
-#         'import_uniform_scale': 1.0,
-#         'combine_meshes': True,
-#         'auto_generate_collision': True,
-#     }
-#     ui.static_mesh_import_data.set_editor_properties(import_data)
 
-#     return ui
+def fbximportdata():
+    import_data= ue.FbxAssetImportData()
+    fbx_import_data = {
+        'convert_scene': True,
+        'import_translation': ue.Vector(0.0,0.0,0.0),
+        'import_rotation':ue.Rotator(0.0,0.0,0.0),
+        'import_uniform_scale': 100   
+        } 
+    import_data.set_editor_properties(fbx_import_data)
+    return import_data
 
-# def build_static_mesh_data():
-#     static_mesh_data = ue.FbxStaticMeshImportData()
-#     static_mesh_data.set_editor_property("build_nanite", False)
-#     static_mesh_data.set_editor_property("auto_generate_collision", False)
-#     return static_mesh_data
 
+def StaticMeshImportData():
+    Fbx_static_mesh_import_data= ue.FbxStaticMeshImportData()
+    fbx_import_properties = {
+        'combine_meshes':True,
+        'remove_degenerates':True,
+        'generate_lightmap_u_vs':True,
+        'auto_generate_collision':False,
+        'build_nanite':True,
+        'combine_meshes':True
+    
+    }
+
+    Fbx_static_mesh_import_data.set_editor_properties(fbx_import_properties)
+
+    return Fbx_static_mesh_import_data
+
+
+def ImportTasks(filename,file_path,options=None):
+    tasks = []
+    task = ue.AssetImportTask()
+    
+    task_properties = {
+        'async_':True,
+        'automated':True,
+        'destination_name':filename,
+        'destination_path':file_path,
+        'options':options
+    }
+    task.set_editor_properties(task_properties)
+    tasks.append(task)
+    return tasks
 
 
 #Start with the project Directory
 projectDir = ue.Paths.project_dir()
 assetTools = ue.AssetToolsHelpers.get_asset_tools()
-destination_path= '/Game/Content/ToolsDev/StaticMeshes'
+destination_path= '/Game/ToolsDev/StaticMeshes'
 
 for folder,subfolders, files in os.walk(projectDir):
     if folder != projectDir:
@@ -63,16 +79,9 @@ for folder,subfolders, files in os.walk(projectDir):
                 static_mesh=f"Path: ", os.path.join(folder, f)
                 print(static_mesh) 
                 # create asset import data object        
-                assetImportData = ue.AutomatedAssetImportData()
+                assetImportData = ue.AssetImportData()
                 # set assetImportData attributes
-                assetImportData.destination_path = '/Game/ToolsDev/ImportMeshes/'
-                assetImportData.filenames = static_mesh
-                assetImportData.replace_existing = True
-                assetTools.import_assets_automated(assetImportData)
-
-
-                
-
-    
-    
-
+                mesh_data = StaticMeshImportData()
+                mesh_opts= staticmeshimportparams(mesh_data) 
+                import_tasks=ImportTasks(str(f),destination_path,mesh_opts)
+                assetTools.import_asset_tasks(import_tasks)
