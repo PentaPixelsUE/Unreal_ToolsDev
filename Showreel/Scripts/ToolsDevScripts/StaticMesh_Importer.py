@@ -57,18 +57,30 @@ def execute_import_static_mesh(game_path,filename):
     import_tasks = build_import_tasks(game_path, filename.replace(".fbx", ""), "/Game/ToolsDev/StaticMeshes/", mesh_options)
     import_static_mesh(import_tasks)
 
+def import_from_disk(asset_prefix):
+    projectDir = unreal.Paths.project_dir() + 'ExternalFiles'
+    steps = 0
+    matching_files = []
+    for folder, subfolders, files in os.walk(projectDir):
+        if folder != projectDir:
+            for f in files:
+                if asset_prefix.lower() in f.lower():
+                    steps += 1
+                    static_mesh = os.path.join(folder, f).replace('\\', '/')
+                    matching_files.append((static_mesh, f))
+    return steps, matching_files
+
+def create_slow_task():
+    steps, matching_files = import_from_disk(asset_prefix)
+    with unreal.ScopedSlowTask(steps, 'Importing Assets...') as slow_task:
+        slow_task.make_dialog(True)
+        for i, (static_mesh, f) in enumerate(matching_files):
+            if slow_task.should_cancel():
+                break
+            slow_task.enter_progress_frame(1, f'Importing Assets... {i}/{steps}')
+            execute_import_static_mesh(static_mesh, f)
+
+import_from_disk(asset_prefix)
+create_slow_task()
 
 
-
-projectDir = unreal.Paths.project_dir()+ 'ExternalFiles'
-
-destination_path= unreal.Paths.project_content_dir() + '/ToolsDev/ImportedMeshes/'
-found_files=[]
-for folder,subfolders, files in os.walk(projectDir):
-    if folder != projectDir:
-        for f in files:
-            if f.startswith("hat_"):
-                static_mesh=os.path.join(folder, f)
-                static_mesh = os.path.join(folder, f).replace('\\', '/')
-                execute_import_static_mesh(static_mesh,f)
-                

@@ -2,6 +2,7 @@ import unreal
 import os
 
 
+    
 def build_import_options(Skeletal_mesh_data):
     options = unreal.FbxImportUI()
     options_editor_properties={
@@ -69,15 +70,32 @@ def execute_import_skeletal_mesh(game_path,filename):
 
 
 
-projectDir = unreal.Paths.project_dir()+ 'ExternalFiles'
+def Import_From_Disk(asset_prefix):
+    projectDir = unreal.Paths.project_dir()+ 'ExternalFiles'
+    steps = 0
+    matching_files=[]
+    for folder,subfolders, files in os.walk(projectDir):
+        if folder != projectDir:
+            for f in files:
+                if asset_prefix.lower() in f.lower():
+                    steps +=1
+                    # Skeletal_mesh=os.path.join(folder, f)
+                    Skeletal_mesh= os.path.join(folder, f).replace('\\', '/')
+                    matching_files.append((Skeletal_mesh,f))
+    return steps,matching_files
 
-destination_path= unreal.Paths.project_content_dir() + '/ToolsDev/ImportedSkeletalMeshes/'
-found_files=[]
-for folder,subfolders, files in os.walk(projectDir):
-    if folder != projectDir:
-        for f in files:
-            if f.startswith("char_"):
-                Skeletal_mesh=os.path.join(folder, f)
-                Skeletal_mesh= os.path.join(folder, f).replace('\\', '/')
-                print(Skeletal_mesh)
-                execute_import_skeletal_mesh(Skeletal_mesh,f)
+
+def create_slow_task():
+    steps, matching_files = Import_From_Disk(asset_prefix)
+    with unreal.ScopedSlowTask(steps,'Importing Assets...') as slow_task:
+        slow_task.make_dialog(True)
+        for i,(skeletal_mesh,f) in enumerate(matching_files):
+            if slow_task.should_cancel():
+                break
+            slow_task.enter_progress_frame(1,f'Importing Assets...{i}/{steps}')
+            execute_import_skeletal_mesh(skeletal_mesh,f)
+
+
+Import_From_Disk(asset_prefix)
+create_slow_task()
+
