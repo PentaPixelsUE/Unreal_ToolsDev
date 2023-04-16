@@ -24,6 +24,7 @@ def build_skeletal_mesh_data():
     vertex_color_options=unreal.VertexColorImportOption.OVERRIDE
     import_content_type=unreal.FBXImportContentType.FBXICT_ALL
     normal_gen_method= unreal.FBXNormalGenerationMethod.BUILT_IN
+    
     Skeletal_mesh_import_properties = {
         'bake_pivot_in_vertex' : False,
         'compute_weighted_normals': True,
@@ -65,7 +66,7 @@ def import_skeletal_mesh(tasks):
 def execute_import_skeletal_mesh(game_path,filename):
     mesh_data = build_skeletal_mesh_data()
     mesh_options = build_import_options(mesh_data)
-    import_tasks = build_import_tasks(game_path, filename.replace(".fbx", ""), "/Game/ToolsDev/SkeltalMeshes/", mesh_options)
+    import_tasks = build_import_tasks(game_path, filename.replace(".fbx", ""), "/Game/ToolsDev/SkeletalMeshes/", mesh_options)
     import_skeletal_mesh(import_tasks)
 
 
