@@ -34,7 +34,7 @@ def build_skeletal_mesh_data():
         'import_uniform_scale':1.0,
         'normal_generation_method': normal_gen_method,
         'reorder_material_to_fbx_order':True,
-        'use_t0_as_ref_pose': False,
+        'use_t0_as_ref_pose': True,
         'vertex_color_import_option': vertex_color_options
     }
     Skeletal_mesh_data.set_editor_properties(Skeletal_mesh_import_properties)
