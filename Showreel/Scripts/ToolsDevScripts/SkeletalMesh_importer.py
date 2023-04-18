@@ -8,7 +8,7 @@ def build_import_options(Skeletal_mesh_data):
     options_editor_properties={
         'import_mesh': True,
         'automated_import_should_detect_type': False,
-        'create_physics_asset':True,
+        'create_physics_asset':False,
         'import_textures': False,
         'import_materials': False,
         'import_as_skeletal':True,
@@ -24,7 +24,7 @@ def build_skeletal_mesh_data():
     vertex_color_options=unreal.VertexColorImportOption.OVERRIDE
     import_content_type=unreal.FBXImportContentType.FBXICT_ALL
     normal_gen_method= unreal.FBXNormalGenerationMethod.BUILT_IN
-    
+
     Skeletal_mesh_import_properties = {
         'bake_pivot_in_vertex' : False,
         'compute_weighted_normals': True,
@@ -39,10 +39,12 @@ def build_skeletal_mesh_data():
         'vertex_color_import_option': vertex_color_options
     }
     Skeletal_mesh_data.set_editor_properties(Skeletal_mesh_import_properties)
+
     return Skeletal_mesh_data
 
 def build_import_tasks(filename: str, destination_name: str, destination_path: str, options):
-    tasks = []
+
+    tasks = [] #Potential Cause for issues ? 
     task = unreal.AssetImportTask() # Contains data for a group of assets to import
     
     tasks_editor_properties = {
@@ -95,8 +97,9 @@ def create_slow_task():
                 break
             slow_task.enter_progress_frame(1,f'Importing Assets...{i}/{steps}')
             execute_import_skeletal_mesh(skeletal_mesh,f)
+            unreal.EditorAssetLibrary.save_directory("/Game/ToolsDev/SkeletalMeshes/",only_if_is_dirty=True,recursive=True)
 
 
 Import_From_Disk(asset_prefix)
 create_slow_task()
-
+cbox_update = True

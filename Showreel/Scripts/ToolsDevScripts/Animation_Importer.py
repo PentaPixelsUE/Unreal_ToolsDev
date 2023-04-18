@@ -10,6 +10,7 @@ def build_anim_import_options(skeleton_path):
         'create_physics_asset':True,
         'import_textures': False,
         'import_materials': False,
+
         'mesh_type_to_import': unreal.FBXImportType.FBXIT_ANIMATION,
         
     }
@@ -66,7 +67,7 @@ def execute_import_animation_(game_path,filename):
 
 
 def Import_From_Disk(asset_prefix):
-    projectDir = unreal.Paths.project_dir()+ 'ExternalFiles/'
+    projectDir = unreal.Paths.project_dir()+ 'ExternalFiles'
     steps = 0
     matching_files=[]
     for folder,subfolders, files in os.walk(projectDir):
@@ -91,3 +92,4 @@ def create_slow_task():
 
 Import_From_Disk(asset_prefix)
 create_slow_task()
+
