@@ -3,14 +3,15 @@ import os
 
 
     
-def build_import_options(Skeletal_mesh_data):
+def build_import_options(Skeletal_mesh_data,mat):
+
     options = unreal.FbxImportUI()
     options_editor_properties={
         'import_mesh': True,
         'automated_import_should_detect_type': False,
         'create_physics_asset':False,
         'import_textures': False,
-        'import_materials': False,
+        'import_materials': mat,
         'import_as_skeletal':True,
         'mesh_type_to_import': unreal.FBXImportType.FBXIT_SKELETAL_MESH,
         "skeletal_mesh_import_data": Skeletal_mesh_data,
@@ -67,7 +68,7 @@ def import_skeletal_mesh(tasks):
 
 def execute_import_skeletal_mesh(game_path,filename):
     mesh_data = build_skeletal_mesh_data()
-    mesh_options = build_import_options(mesh_data)
+    mesh_options = build_import_options(mesh_data,mat)
     import_tasks = build_import_tasks(game_path, filename.replace(".fbx", ""), "/Game/ToolsDev/SkeletalMeshes/", mesh_options)
     import_skeletal_mesh(import_tasks)
 
@@ -95,7 +96,7 @@ def create_slow_task():
         for i,(skeletal_mesh,f) in enumerate(matching_files):
             if slow_task.should_cancel():
                 break
-            slow_task.enter_progress_frame(1,f'Importing Assets...{i}/{steps}')
+            slow_task.enter_progress_frame(1,f'Importing Assets {f} {i}/{steps}')
             execute_import_skeletal_mesh(skeletal_mesh,f)
             unreal.EditorAssetLibrary.save_directory("/Game/ToolsDev/SkeletalMeshes/",only_if_is_dirty=True,recursive=True)
 

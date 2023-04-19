@@ -67,7 +67,7 @@ def execute_import_animation_(game_path,filename):
 
 
 def Import_From_Disk(asset_prefix):
-    projectDir = unreal.Paths.project_dir()+ 'ExternalFiles'
+    projectDir = unreal.Paths.project_dir()+ 'ExternalFiles/Animations'
     steps = 0
     matching_files=[]
     for folder,subfolders, files in os.walk(projectDir):
@@ -86,7 +86,7 @@ def create_slow_task():
         for i,(animation_asset,f) in enumerate(matching_files):
             if slow_task.should_cancel():
                 break
-            slow_task.enter_progress_frame(1,f'Importing Assets...{i}/{steps}')
+            slow_task.enter_progress_frame(1,f'Importing  {f}{i}/{steps}')
             execute_import_animation_(animation_asset,f)
 
 

@@ -13,9 +13,13 @@ def check_files(existing_names=[]):
         assets = reg.get_assets_by_path(dir_path, recursive=False)
         for asset in assets:
             name = asset.asset_name
+            
             first_name = str(name).split('_')[0]
             if first_name not in first_names:
                 first_names.append(first_name)
+                
+                
+           
                 
 
     else:
@@ -27,9 +31,9 @@ def check_files(existing_names=[]):
 
 existing_names= check_files()
 
+char_cbox.clear_options()
+for name in existing_names:
+    char_cbox.add_option(name)
+    
 
-for char in existing_names:
-    if char in existing_names:
-        char_cbox.add_option(char)
-           
 

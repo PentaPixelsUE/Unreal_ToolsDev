@@ -20,13 +20,13 @@ def build_import_tasks(filename: str, destination_name: str, destination_path: s
     tasks.append(task)
     return tasks
 
-def build_import_options(static_mesh_data):
+def build_import_options(static_mesh_data,mat):
     options = unreal.FbxImportUI()
     options_editor_properties={
         'import_mesh': True,
         'create_physics_asset':False,
         'import_textures': False,
-        'import_materials': False,
+        'import_materials': mat,
         'import_as_skeletal':False,
         "static_mesh_import_data": static_mesh_data,
     }
@@ -53,10 +53,10 @@ def import_static_mesh(tasks):
 
 def execute_import_static_mesh(game_path,filename):
     mesh_data = build_static_mesh_data()
-    mesh_options = build_import_options(mesh_data)
-    import_tasks = build_import_tasks(game_path, filename.replace(".fbx", ""), "/Game/ToolsDev/StaticMeshes/", mesh_options)
+    mesh_options = build_import_options(mesh_data,mat)
+    import_tasks = build_import_tasks(game_path, filename.replace(".fbx", ""), "/Game/ToolsDev/StaticMeshes/", mesh_options)  
     import_static_mesh(import_tasks)
-
+   
 def import_from_disk(asset_prefix):
     projectDir = unreal.Paths.project_dir() + 'ExternalFiles'
     steps = 0
@@ -77,10 +77,9 @@ def create_slow_task():
         for i, (static_mesh, f) in enumerate(matching_files):
             if slow_task.should_cancel():
                 break
-            slow_task.enter_progress_frame(1, f'Importing Assets... {i}/{steps}')
+            slow_task.enter_progress_frame(1, f'Importing {f} {i}/{steps}')#TEMP use stem instead
             execute_import_static_mesh(static_mesh, f)
 
 import_from_disk(asset_prefix)
 create_slow_task()
-
 

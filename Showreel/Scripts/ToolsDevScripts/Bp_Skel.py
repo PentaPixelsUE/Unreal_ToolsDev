@@ -23,14 +23,3 @@ def check_files():
 check_files()
 
 
-
-
-# def create_an_actor_blueprint(asset_prefix):
-
-#     package_path = '/Game/ToolsDev/Blueprints/'
-#     factory= unreal.BlueprintFactory()
-#     factory.set_editor_properties("parent_class",unreal.Actor)
-
-#     asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
-
-#     new_asset_name = asset_prefix
