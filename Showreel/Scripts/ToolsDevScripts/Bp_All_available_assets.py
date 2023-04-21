@@ -7,7 +7,7 @@ def create_blueprint(asset_skelmeshes_map):
     asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
 
     factory = unreal.BlueprintFactory()
-    factory.set_editor_property("parent_class", unreal.Character)
+    factory.set_editor_property("parent_class", unreal.Actor)
     for asset_name, component_skelmeshes in asset_skelmeshes_map.items():
         blueprint = asset_tools.create_asset(asset_name, '/Game/ToolsDev/Blueprints', None, factory)
 
@@ -60,9 +60,12 @@ def check_files():
 # Example usage:
 asset_skelmeshes_map = check_files()
 create_blueprint(asset_skelmeshes_map)
-# for asset_name, component_skelmeshes in asset_skelmeshes_map.items():
-#     print("Skeletal Meshes for asset {}: ".format(asset_name))
-#     for component_name, skelmesh in component_skelmeshes.items():
-#         print("  Component {}: {}".format(component_name, skelmesh))
+for asset_name, component_skelmeshes in asset_skelmeshes_map.items():
+    print("Skeletal Meshes for asset {}: ".format(asset_name))
+    for component_name, skelmesh in component_skelmeshes.items():
+        print("  Component {}: {}".format(component_name, skelmesh))
 
 
+# for asset_name, component_names in asset_component_map.items():
+#     blueprint = create_blueprint(asset_name, component_names,skelmeshes)
+#     print(f"Created blueprint {asset_name} with {len(component_names)} components.")

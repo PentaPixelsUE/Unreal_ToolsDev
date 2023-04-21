@@ -2,6 +2,25 @@ import unreal
 import os
 
 
+
+def check_files(char):
+    reg = unreal.AssetRegistryHelpers.get_asset_registry()
+    eal = unreal.EditorAssetLibrary()
+    skeletons=[]
+    dir_path = "/Game/ToolsDev/SkeletalMeshes"
+    if eal.does_directory_exist(dir_path):
+        assets = reg.get_assets_by_path(dir_path, recursive=True)
+        for asset in assets:
+            full_name = asset.get_full_name()
+            path = full_name.split(' ')[-1]
+            skelmesh = unreal.load_asset(path)
+            if isinstance(skelmesh, unreal.Skeleton):
+                skeleton_name = skelmesh.get_name()
+                if char in skeleton_name:
+                    return path
+    
+                
+
 def build_anim_import_options(skeleton_path):
     options = unreal.FbxImportUI()
     options.skeleton=unreal.load_asset(skeleton_path)
@@ -11,7 +30,6 @@ def build_anim_import_options(skeleton_path):
         'create_physics_asset':True,
         'import_textures': False,
         'import_materials': False,
-
         'mesh_type_to_import': unreal.FBXImportType.FBXIT_ANIMATION,
         
     }
@@ -61,14 +79,15 @@ def import_animation(tasks):
     asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
     asset_tools.import_asset_tasks(tasks)
 
-def execute_import_animation_(game_path,filename):
+def execute_import_animation_(game_path,filename,char):
+    skeleton_path=check_files(char)
     mesh_options = build_anim_import_options(skeleton_path)
     import_tasks = build_import_tasks(game_path, filename.replace(".fbx", ""), "/Game/ToolsDev/Animations/", mesh_options)
     import_animation(import_tasks)
 
 
 def Import_From_Disk(asset_prefix):
-    projectDir = unreal.Paths.project_dir()+ 'ExternalFiles/Animations'
+    projectDir = unreal.Paths.project_dir()+ 'ExternalFiles/'
     steps = 0
     matching_files=[]
     for folder,subfolders, files in os.walk(projectDir):
@@ -87,10 +106,9 @@ def create_slow_task():
         for i,(animation_asset,f) in enumerate(matching_files):
             if slow_task.should_cancel():
                 break
-            slow_task.enter_progress_frame(1,f'Importing  {f}{i}/{steps}')
+            slow_task.enter_progress_frame(1,f'Importing Assets...{i}/{steps}')
             execute_import_animation_(animation_asset,f)
 
 
 Import_From_Disk(asset_prefix)
 create_slow_task()
-
