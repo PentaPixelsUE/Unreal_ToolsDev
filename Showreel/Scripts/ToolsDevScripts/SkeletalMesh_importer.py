@@ -56,7 +56,7 @@ def build_import_tasks(filename: str, destination_name: str, destination_path: s
         "filename": filename,
         'options': options,
         'replace_existing':True,
-        'save':True
+        'save':False
     }
     task.set_editor_properties(tasks_editor_properties)
     tasks.append(task)
@@ -86,6 +86,7 @@ def Import_From_Disk(asset_prefix):
                     # Skeletal_mesh=os.path.join(folder, f)
                     Skeletal_mesh= os.path.join(folder, f).replace('\\', '/')
                     matching_files.append((Skeletal_mesh,f))
+                    
     return steps,matching_files
 
 
@@ -98,8 +99,8 @@ def create_slow_task():
                 break
             slow_task.enter_progress_frame(1,f'Importing Assets {f} {i}/{steps}')
             execute_import_skeletal_mesh(skeletal_mesh,f)
-            unreal.EditorAssetLibrary.save_directory("/Game/ToolsDev/SkeletalMeshes/",only_if_is_dirty=True,recursive=True)
-
+            #unreal.EditorAssetLibrary.save_directory("/Game/ToolsDev/SkeletalMeshes/",only_if_is_dirty=True,recursive=True)
+            unreal.EditorAssetLibrary.checkout_directory(("/Game/ToolsDev/SkeletalMeshes/",recursive=True))
 
 Import_From_Disk(asset_prefix)
 create_slow_task()
