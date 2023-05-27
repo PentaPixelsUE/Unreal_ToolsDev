@@ -16,31 +16,10 @@ def create_blueprint(selected_char, asset_skelmeshes_map,parent_class,selected_c
     subsystem = unreal.get_engine_subsystem(unreal.SubobjectDataSubsystem)
     root_data_handle = subsystem.k2_gather_subobject_data_for_blueprint(blueprint)[0]
 
-    # for asset_name, component_skelmeshes in asset_skelmeshes_map.items():
-    #     if selected_char not in asset_name:
-    #         continue
-    #     for component_name, skelmesh in component_skelmeshes.items():
-    #         sub_handle, fail_reason = subsystem.add_new_subobject(
-    #             unreal.AddNewSubobjectParams(
-    #                 parent_handle=root_data_handle,
-    #                 new_class=unreal.SkeletalMeshComponent,
-    #                 blueprint_context=blueprint
-    #             )
-    #         )
-
-    #         if not fail_reason.is_empty():
-    #             raise Exception(f"Failed to add sub-object {component_name} to blueprint {asset_name}: {fail_reason}")
-
-    #         subobject_datasys.rename_subobject(sub_handle, component_name)
-    #         component_data = subobject_datasys.k2_find_subobject_data_from_handle(sub_handle)
-    #         sub_handle_object = subob_data_bp_factory_lib.get_object(component_data, even_if_pending_kill=False)
-    #         unreal.SkeletalMeshComponent.set_skeletal_mesh_asset(sub_handle_object, skelmesh)
     for asset_name, component_skelmeshes in asset_skelmeshes_map.items():
         if selected_char not in asset_name:
             continue
         for component_name, skelmesh in component_skelmeshes.items():
-            if selected_class not in component_name:
-                continue
             sub_handle, fail_reason = subsystem.add_new_subobject(
                 unreal.AddNewSubobjectParams(
                     parent_handle=root_data_handle,

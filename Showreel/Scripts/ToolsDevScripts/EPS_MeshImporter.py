@@ -1,3 +1,8 @@
+#NOTES:
+#ONLY FOR EXECUTE PYTON SCRIPT NODE 
+#EXECUTE PYTHON COMMANDE DOES NOT READ PY FILES 
+
+
 import sys
 import unreal
 project_path= unreal.Paths.project_dir()

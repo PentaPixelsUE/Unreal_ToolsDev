@@ -9,11 +9,12 @@ def create_blueprint(asset_skelmeshes_map):
     factory = unreal.BlueprintFactory()
     factory.set_editor_property("parent_class", unreal.Actor)
     for asset_name, component_skelmeshes in asset_skelmeshes_map.items():
-        blueprint = asset_tools.create_asset(asset_name, '/Game/ToolsDev/Blueprints', None, factory)
-
-        subsystem = unreal.get_engine_subsystem(unreal.SubobjectDataSubsystem)
-        root_data_handle = subsystem.k2_gather_subobject_data_for_blueprint(blueprint)[0]
         for component_name, skelmesh in component_skelmeshes.items():
+            blueprint = asset_tools.create_asset(asset_name, '/Game/ToolsDev/Blueprints', None, factory)
+
+            subsystem = unreal.get_engine_subsystem(unreal.SubobjectDataSubsystem)
+            root_data_handle = subsystem.k2_gather_subobject_data_for_blueprint(blueprint)[0]
+            
             sub_handle, fail_reason = subsystem.add_new_subobject(
                 unreal.AddNewSubobjectParams(
                     parent_handle=root_data_handle,
@@ -29,6 +30,7 @@ def create_blueprint(asset_skelmeshes_map):
             component_data= subobject_datasys.k2_find_subobject_data_from_handle(sub_handle)
             sub_handle_object= subob_data_bp_factory_lib.get_object(component_data,even_if_pending_kill=False)
             unreal.SkeletalMeshComponent.set_skeletal_mesh_asset(sub_handle_object,skelmesh)
+            
 
     return blueprint
 

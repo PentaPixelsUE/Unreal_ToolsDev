@@ -107,7 +107,7 @@ def create_slow_task():
             if slow_task.should_cancel():
                 break
             slow_task.enter_progress_frame(1,f'Importing Assets...{i}/{steps}')
-            execute_import_animation_(animation_asset,f)
+            execute_import_animation_(animation_asset,f,char)
 
 
 Import_From_Disk(asset_prefix)
