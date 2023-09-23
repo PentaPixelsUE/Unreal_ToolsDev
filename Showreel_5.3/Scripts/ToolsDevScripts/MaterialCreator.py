@@ -1,5 +1,5 @@
 import unreal
-
+from Material_Assign import Materials
 mel = unreal.MaterialEditingLibrary
 asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
 eal = unreal.EditorAssetLibrary
@@ -7,6 +7,7 @@ eal = unreal.EditorAssetLibrary
 # Read ALL textures
 Tex_Dir = "/Game/Shaders/Textures/"
 MA_Dir = "/Game/Shaders/Materials/"
+Mesh_Dir="/Game/Shaders/Models/"
 textures = eal.list_assets(directory_path=Tex_Dir, recursive=True, include_folder=False)
 
 # Create a dictionary to store the texture categories
@@ -31,9 +32,10 @@ for tex in textures:
         else:
             texture_categories[prefix].append(suffix)
 
-for prefix, suffixes in texture_categories.items():
-    warning=(f"{prefix} has {', '.join(suffixes)}")
-    unreal.log_warning(warning)
+# for prefix, suffixes in texture_categories.items():
+#     warning=(f"{prefix} has {', '.join(suffixes)}")
+#     unreal.log_warning(warning)
+posx=-800
 for prefix, suffixes in texture_categories.items():
     # Create a new material for each prefix
     
@@ -41,8 +43,9 @@ for prefix, suffixes in texture_categories.items():
 
     # Iterate through the suffixes (texture types)
     posy=0
+
     for suffix in suffixes:
-        posx=-800
+        
         
         # Create a material expression for the texture sample
         create_expression = unreal.MaterialEditingLibrary.create_material_expression
@@ -74,7 +77,10 @@ for prefix, suffixes in texture_categories.items():
                 elif "Normal" in suffix:
                     unreal.MaterialEditingLibrary.connect_material_property(texture_sample, '', unreal.MaterialProperty.MP_NORMAL)
         posy+=500
-        
-    
-    
-    
+    mel.recompile_material(new_mat)
+    eal.save_loaded_asset(new_mat)
+      
+
+
+for mat in Materials:   
+    unreal.reload(mat)
