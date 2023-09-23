@@ -1,4 +1,4 @@
-import fbx as pyfbx
+import fbx
 
 # Load the FBX file
 fbx_path = 'D:\Projects\Showreel_2023\Showreel\ExternalFiles\Modular_Characters\King\King_Body.fbx'
