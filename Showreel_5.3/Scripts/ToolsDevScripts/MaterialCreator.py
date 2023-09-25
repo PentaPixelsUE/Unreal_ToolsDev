@@ -1,5 +1,6 @@
 import unreal
-from Material_Assign import Materials
+from Material_Assign import *
+
 mel = unreal.MaterialEditingLibrary
 asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
 eal = unreal.EditorAssetLibrary
@@ -7,11 +8,12 @@ eal = unreal.EditorAssetLibrary
 # Read ALL textures
 Tex_Dir = "/Game/Shaders/Textures/"
 MA_Dir = "/Game/Shaders/Materials/"
-Mesh_Dir="/Game/Shaders/Models/"
+Mesh_Dir = "/Game/Shaders/Models/"
 textures = eal.list_assets(directory_path=Tex_Dir, recursive=True, include_folder=False)
 
 # Create a dictionary to store the texture categories
 texture_categories = {}
+
 
 for tex in textures:
     loaded_tex = unreal.load_asset(tex)
@@ -23,7 +25,7 @@ for tex in textures:
         # Extract the part before the last "_"
         prefix = '_'.join(parts[:-1])
 
-        # Extract the last part and remove "BaseColor" from it
+        # Extract the last part
         suffix = parts[-1]
 
         # Initialize or update the texture category in the dictionary
@@ -32,55 +34,54 @@ for tex in textures:
         else:
             texture_categories[prefix].append(suffix)
 
-# for prefix, suffixes in texture_categories.items():
-#     warning=(f"{prefix} has {', '.join(suffixes)}")
-#     unreal.log_warning(warning)
-posx=-800
+posx = -800
+
+for prefix, suffixes in texture_categories.items():
+    print( f"{prefix} has {', '.join(suffixes)}")
+
+
+
 for prefix, suffixes in texture_categories.items():
     # Create a new material for each prefix
-    
     new_mat = asset_tools.create_asset(asset_name='MA_' + prefix, package_path=MA_Dir, asset_class=unreal.Material, factory=unreal.MaterialFactoryNew())
 
     # Iterate through the suffixes (texture types)
-    posy=0
+    posy = 0
 
     for suffix in suffixes:
-        
-        
-        # Create a material expression for the texture sample
-        create_expression = unreal.MaterialEditingLibrary.create_material_expression
-        texture_sample = create_expression(new_mat, unreal.MaterialExpressionTextureSample,posx,posy)
+        # Create a material expression for the texture sample (only if suffix is not empty)
+        if suffix:
+            create_expression = unreal.MaterialEditingLibrary.create_material_expression
+            texture_sample = create_expression(new_mat, unreal.MaterialExpressionTextureSample, posx, posy)
 
-        # Set the sampler type to NORMAL
-        if "Normal"in suffix:
-            texture_sample.sampler_type = unreal.MaterialSamplerType.SAMPLERTYPE_NORMAL
+            # Set the sampler type to NORMAL
+            if "Normal" in suffix:
+                texture_sample.set_editor_property("SamplerType", unreal.MaterialSamplerType.SAMPLERTYPE_NORMAL)
 
-        # Construct the expected texture name for this suffix
-        expected_tex_name = prefix + "_" + suffix
+            # Construct the expected texture name for this suffix
+            expected_tex_name = prefix + "_" + suffix
 
-        # Find and load the corresponding texture
-        for tex in textures:
-            loaded_tex = unreal.load_asset(tex)
-            tex_name = loaded_tex.get_name()
+            # Find and load the corresponding texture
+            for tex in textures:
+                loaded_tex = unreal.load_asset(tex)
+                tex_name = loaded_tex.get_name()
 
-            if tex_name == expected_tex_name:
-                # Assign the loaded texture to the texture sample expression
-                texture_sample.texture = loaded_tex
+                if tex_name == expected_tex_name:
+                    # Assign the loaded texture to the texture sample expression
+                    texture_sample.texture = loaded_tex
 
-                # Connect the texture sample expression to the appropriate material property based on the suffix
-                if "BaseColor" in suffix:
-                    unreal.MaterialEditingLibrary.connect_material_property(texture_sample, '', unreal.MaterialProperty.MP_BASE_COLOR)
-                elif "Roughness" in suffix:
-                    unreal.MaterialEditingLibrary.connect_material_property(texture_sample, '', unreal.MaterialProperty.MP_ROUGHNESS)
-                elif "Metallic" in suffix:
-                    unreal.MaterialEditingLibrary.connect_material_property(texture_sample, '', unreal.MaterialProperty.MP_METALLIC)
-                elif "Normal" in suffix:
-                    unreal.MaterialEditingLibrary.connect_material_property(texture_sample, '', unreal.MaterialProperty.MP_NORMAL)
-        posy+=500
+                    # Connect the texture sample expression to the appropriate material property based on the suffix
+                    if "BaseColor" in suffix:
+                        unreal.MaterialEditingLibrary.connect_material_property(texture_sample, '', unreal.MaterialProperty.MP_BASE_COLOR)
+                    elif "Roughness" in suffix:
+                        unreal.MaterialEditingLibrary.connect_material_property(texture_sample, '', unreal.MaterialProperty.MP_ROUGHNESS)
+                    elif "Metallic" in suffix:
+                        unreal.MaterialEditingLibrary.connect_material_property(texture_sample, '', unreal.MaterialProperty.MP_METALLIC)
+                    elif "Normal" in suffix:
+                        unreal.MaterialEditingLibrary.connect_material_property(texture_sample, '', unreal.MaterialProperty.MP_NORMAL)
+                    elif "Opacity" or "opacity" in suffix:
+                        unreal.MaterialEditingLibrary.connect_material_property(texture_sample, '', unreal.MaterialProperty.MP_OPACITY)
+            posy += 500
+
     mel.recompile_material(new_mat)
-    eal.save_loaded_asset(new_mat)
-      
-
-
-for mat in Materials:   
-    unreal.reload(mat)
+unreal.EditorDialog.show_message("Asset Creation Warning","Generated Materials !", unreal.AppMsgType.OK)
