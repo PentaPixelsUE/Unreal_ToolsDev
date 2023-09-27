@@ -31,10 +31,10 @@ def create_blueprint(selected_char, asset_skelmeshes_map,parent_class,selected_c
             if not fail_reason.is_empty():
                 raise Exception(f"Failed to add sub-object {component_name} to blueprint {asset_name}: {fail_reason}")
 
-            subobject_datasys.rename_subobject(sub_handle, component_name)
-            component_data = subobject_datasys.k2_find_subobject_data_from_handle(sub_handle)
-            sub_handle_object = subob_data_bp_factory_lib.get_object(component_data, even_if_pending_kill=False)
-            unreal.SkeletalMeshComponent.set_skeletal_mesh_asset(sub_handle_object, skelmesh)
+        subobject_datasys.rename_subobject(sub_handle, component_name)
+        component_data = subobject_datasys.k2_find_subobject_data_from_handle(sub_handle)
+        sub_handle_object = subob_data_bp_factory_lib.get_object(component_data, even_if_pending_kill=False)
+        unreal.SkeletalMeshComponent.set_skeletal_mesh_asset(sub_handle_object, skelmesh)
 
     return blueprint
 
