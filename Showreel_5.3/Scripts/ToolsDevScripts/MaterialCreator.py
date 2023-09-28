@@ -11,33 +11,33 @@ MA_Dir = "/Game/Shaders/Materials/"
 Mesh_Dir = "/Game/Shaders/Models/"
 textures = eal.list_assets(directory_path=Tex_Dir, recursive=True, include_folder=False)
 
-# # Create a dictionary to store the texture categories
-# texture_categories = {}
+# Create a dictionary to store the texture categories
+texture_categories = {}
 
 
-# for tex in textures:
-#     loaded_tex = unreal.load_asset(tex)
-#     tex_name = loaded_tex.get_name()
-#     # Split the texture name at "_"
-#     parts = tex_name.split("_")
+for tex in textures:
+    loaded_tex = unreal.load_asset(tex)
+    tex_name = loaded_tex.get_name()
+    # Split the texture name at "_"
+    parts = tex_name.split("_")
 
-#     if len(parts) > 1:
-#         # Extract the part before the last "_"
-#         prefix = '_'.join(parts[:-1])
+    if len(parts) > 1:
+        # Extract the part before the last "_"
+        prefix = '_'.join(parts[:-1])
 
-#         # Extract the last part
-#         suffix = parts[-1]
+        # Extract the last part
+        suffix = parts[-1]
 
-#         # Initialize or update the texture category in the dictionary
-#         if prefix not in texture_categories:
-#             texture_categories[prefix] = [suffix]
-#         else:
-#             texture_categories[prefix].append(suffix)
+        # Initialize or update the texture category in the dictionary
+        if prefix not in texture_categories:
+            texture_categories[prefix] = [suffix]
+        else:
+            texture_categories[prefix].append(suffix)
 
-#
 
-# for prefix, suffixes in texture_categories.items():
-#     print( f"{prefix} has {', '.join(suffixes)}")
+
+for prefix, suffixes in texture_categories.items():
+    print( f"{prefix} has {', '.join(suffixes)}")
 
 
 
@@ -61,22 +61,23 @@ def create_master_material(texture_directory, material_directory):
             create_expression = unreal.MaterialEditingLibrary.create_material_expression
             texture_sample = create_expression(new_mat, unreal.MaterialExpressionTextureSampleParameter2D, posx, posy)
 
-
-            multiplynode=create_expression(new_mat,unreal.MaterialExpressionMultiply,posx+400,posy)
+            static_switch_param=create_expression(new_mat,unreal.MaterialExpressionStaticSwitchParameter,posx+400,posy)
+            static_switch=create_expression(new_mat,unreal.MaterialExpressionStaticSwitch,posx+400,posy+400)
+           
             
-            scalar_param=create_expression(new_mat,unreal.MaterialExpressionScalarParameter, posx+400, posy+200)
-            
+            static_switch.set_editor_property("default_value",False)
             texture_sample.texture = loaded_tex
             texture_sample.set_editor_property("SamplerType", unreal.MaterialSamplerType.SAMPLERTYPE_NORMAL)
-
+            static_switch_param.set_editor_property("parameter_name",tex_name)
            
-            scalar_param.set_editor_properties({"parameter_name": tex_name+"_multipler"}) 
-            scalar_param.set_editor_property("default_value",1.0)
+            
 
-            unreal.MaterialEditingLibrary.connect_material_expressions(texture_sample,'',multiplynode,'A')
-            unreal.MaterialEditingLibrary.connect_material_expressions(scalar_param,'',multiplynode,'B')
+            unreal.MaterialEditingLibrary.connect_material_expressions(texture_sample,'',static_switch,'')
+            unreal.MaterialEditingLibrary.connect_material_expressions(texture_sample,'',static_switch_param,'True')
+            unreal.MaterialEditingLibrary.connect_material_expressions(static_switch,'',static_switch_param,'False')
 
-            unreal.MaterialEditingLibrary.connect_material_property(multiplynode, '', unreal.MaterialProperty.MP_NORMAL)
+            
+            unreal.MaterialEditingLibrary.connect_material_property(static_switch_param, '', unreal.MaterialProperty.MP_NORMAL)
             
 
 
@@ -86,46 +87,45 @@ def create_master_material(texture_directory, material_directory):
             texture_sample = create_expression(new_mat, unreal.MaterialExpressionTextureSampleParameter2D, posx, posy)
             texture_sample.texture = loaded_tex
             texture_sample.set_editor_property("parameter_name", tex_name)
-
-            multiplynode=create_expression(new_mat,unreal.MaterialExpressionMultiply,posx+400,posy)
+            static_switch_param=create_expression(new_mat,unreal.MaterialExpressionStaticSwitchParameter,posx+400,posy)
+            static_switch=create_expression(new_mat,unreal.MaterialExpressionStaticSwitch,posx+400,posy+400)
+           
             
-            scalar_param=create_expression(new_mat,unreal.MaterialExpressionScalarParameter, posx+400, posy+200)
-
-            unreal.MaterialEditingLibrary.connect_material_expressions(texture_sample,'',multiplynode,'A')
-            unreal.MaterialEditingLibrary.connect_material_expressions(scalar_param,'',multiplynode,'B')
+            static_switch.set_editor_property("default_value",False)
+            static_switch_param.set_editor_property("parameter_name",tex_name)
             
-            scalar_param.set_editor_properties({"parameter_name": tex_name+"_multipler"}) 
-            scalar_param.set_editor_property("default_value",1.0)
-
+        
+            
+            unreal.MaterialEditingLibrary.connect_material_expressions(texture_sample,'',static_switch,'')
+            unreal.MaterialEditingLibrary.connect_material_expressions(texture_sample,'',static_switch_param,'True')
+            unreal.MaterialEditingLibrary.connect_material_expressions(static_switch,'',static_switch_param,'False')
             if "basecolor" in tex_name.lower():
-                unreal.MaterialEditingLibrary.connect_material_property(multiplynode, '', unreal.MaterialProperty.MP_BASE_COLOR)
+                unreal.MaterialEditingLibrary.connect_material_property(static_switch_param, '', unreal.MaterialProperty.MP_BASE_COLOR)
             elif "Roughness" in tex_name:
-                unreal.MaterialEditingLibrary.connect_material_property(multiplynode, '', unreal.MaterialProperty.MP_ROUGHNESS)
+                unreal.MaterialEditingLibrary.connect_material_property(static_switch_param, '', unreal.MaterialProperty.MP_ROUGHNESS)
             elif "Metallic" in tex_name:
-                unreal.MaterialEditingLibrary.connect_material_property(multiplynode, '', unreal.MaterialProperty.MP_METALLIC)
-            
+                unreal.MaterialEditingLibrary.connect_material_property(static_switch_param, '', unreal.MaterialProperty.MP_METALLIC)   
             elif "Opacity" in tex_name:
-                unreal.MaterialEditingLibrary.connect_material_property(multiplynode, '', unreal.MaterialProperty.MP_OPACITY)
+                unreal.MaterialEditingLibrary.connect_material_property(static_switch_param, '', unreal.MaterialProperty.MP_OPACITY)
             elif "Specular" in tex_name:
-                unreal.MaterialEditingLibrary.connect_material_property(multiplynode, '', unreal.MaterialProperty.MP_SPECULAR)
+                unreal.MaterialEditingLibrary.connect_material_property(static_switch_param, '', unreal.MaterialProperty.MP_SPECULAR)
         posy += 500
     return new_mat
 
 
-# def create_material_instances(texture_categories,texture_dir,mat_dir,master):
+#def create_material_instances(texture_categories,texture_dir,mat_dir,master):
+new_mat = create_master_material(Tex_Dir,MA_Dir)
 
-#     matlab=unreal.MaterialLibrary()
-#     instance_mat_new=asset_tools.create_asset(asset_name='MA_Inst' + prefix, package_path=MA_Dir, asset_class=unreal.MaterialInstanceConstant, factory=None)
-#     instance_mat_new.set_editor_property("parent",new_mat)
+matlab=unreal.MaterialLibrary()
+instance_mat_new=asset_tools.create_asset(asset_name='MA_Inst', package_path=MA_Dir, asset_class=unreal.MaterialInstanceConstant, factory=None)
+instance_mat_new.set_editor_property("parent",new_mat)
 
-#     eal=unreal.EditorAssetLibrary()
+eal=unreal.EditorAssetLibrary()
 
 
-#     param=instance_mat_new.get_editor_property("texture_parameter_values")
-#     unreal.log_warning(param)
-#     mel.set_material_instance_texture_parameter_value(instance_mat_new,"Basecolor",loaded_tex)
-
-#     eal.save_directory(MA_Dir)
+#mel.set_material_instance_texture_parameter_value(instance_mat_new,"Basecolor",loaded_tex)
+mel.set_material_instance_static_switch_parameter_value(instance_mat_new,"Basecolor",True,unreal.MaterialParameterAssociation.GLOBAL_PARAMETER)
+eal.save_directory(MA_Dir)
 
 
 
