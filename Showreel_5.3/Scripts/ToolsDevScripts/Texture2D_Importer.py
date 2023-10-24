@@ -7,11 +7,10 @@ import os
 file_extensions = (".png", ".jpg", ".jpeg", ".bmp", ".exr", ".hdr", ".tga","tiff","tif")
 
 
-def import_textures(asset_prefix):
+def import_textures(asset_prefix,file_extensions):
    
     projectDir = unreal.Paths.project_dir() + 'ExternalFiles'
-    file_extensions = (".png", ".jpg", ".jpeg", ".bmp", ".exr", ".hdr", ".tga")
-
+    
     def get_file_path(folder, name):
         return os.path.join(folder, name).replace('\\', '/')
 
@@ -57,7 +56,7 @@ def create_slow_task():
 
                              
  
-import_textures(asset_prefix)
+import_textures(asset_prefix,file_extensions)
 create_slow_task()
 
 

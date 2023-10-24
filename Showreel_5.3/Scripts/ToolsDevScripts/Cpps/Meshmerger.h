@@ -1,127 +1,94 @@
-#include "MeshMergeFunctionLibrary.h"
-#include "SkeletalMeshMerge.h"
-#include "Engine/SkeletalMeshSocket.h"
-#include "Engine/SkeletalMesh.h"
-#include "Animation/Skeleton.h"
-static void ToMergeParams(const TArray<FSkelMeshMergeSectionMapping_BP>& InSectionMappings, TArray<FSkelMeshMergeSectionMapping>& OutSectionMappings)
+#pragma once
+#include "CoreMinimal.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
+#include "UObject/NoExportTypes.h"
+#include "MeshMergeFunctionLibrary.generated.h"
+/**
+* Blueprint equivalent of FSkeleMeshMergeSectionMapping
+* Info to map all the sections from a single source skeletal mesh to
+* a final section entry in the merged skeletal mesh.
+*/
+USTRUCT(BlueprintType)
+struct PROJECTNAME_API FSkelMeshMergeSectionMapping_BP
 {
-    if (InSectionMappings.Num() > 0)
-    {
-        OutSectionMappings.AddUninitialized(InSectionMappings.Num());
-        for (int32 i = 0; i < InSectionMappings.Num(); ++i)
-        {
-            OutSectionMappings[i].SectionIDs = InSectionMappings[i].SectionIDs;
-        }
-    }
+    GENERATED_BODY()
+        /** Indices to final section entries of the merged skeletal mesh */
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh Merge Params")
+        TArray < int32 > SectionIDs;
 };
-
-
-
-
-static void ToMergeParams(const TArray<FSkelMeshMergeUVTransformMapping>& InUVTransformsPerMesh, TArray<FSkelMeshMergeUVTransforms>& OutUVTransformsPerMesh)
+/**
+* Used to wrap a set of UV Transforms for one mesh.
+*/
+USTRUCT(BlueprintType)
+struct PROJECTNAME_API FSkelMeshMergeUVTransform
 {
-    if (InUVTransformsPerMesh.Num() > 0)
-    {
-        OutUVTransformsPerMesh.Empty();
-        OutUVTransformsPerMesh.AddUninitialized(InUVTransformsPerMesh.Num());
-        for (int32 i = 0; i < InUVTransformsPerMesh.Num(); ++i)
-        {
-            TArray<TArray<FTransform>>& OutUVTransforms = OutUVTransformsPerMesh[i].UVTransformsPerMesh;
-            const TArray<FSkelMeshMergeUVTransform>& InUVTransforms = InUVTransformsPerMesh[i].UVTransformsPerMesh;
-            if (InUVTransforms.Num() > 0)
-            {
-                OutUVTransforms.Empty();
-                OutUVTransforms.AddUninitialized(InUVTransforms.Num());
-                for (int32 j = 0; j < InUVTransforms.Num(); j++)
-                {
-                    OutUVTransforms[i] = InUVTransforms[i].UVTransforms;
-                }
-            }
-        }
-    }
+    GENERATED_BODY()
+        /** A list of how UVs should be transformed on a given mesh, where index represents a specific UV channel. */
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh Merge Params")
+        TArray < FTransform > UVTransforms;
 };
-
-
-
-USkeletalMesh* UMeshMergeFunctionLibrary::MergeMeshes(const FSkeletalMeshMergeParams& Params)
+/**
+* Blueprint equivalent of FSkelMeshMergeUVTransforms
+* Info to map all the sections about how to transform their UVs
+*/
+USTRUCT(BlueprintType)
+struct PROJECTNAME_API FSkelMeshMergeUVTransformMapping
 {
-    TArray<USkeletalMesh*> MeshesToMergeCopy = Params.MeshesToMerge;
-    MeshesToMergeCopy.RemoveAll([](USkeletalMesh* InMesh)
+    GENERATED_BODY()
+        /** For each UV channel on each mesh, how the UVS should be transformed. */
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh Merge Params")
+        TArray < FSkelMeshMergeUVTransform > UVTransformsPerMesh;
+};
+/**
+* Struct containing all parameters used to perform a Skeletal Mesh merge.
+*/
+USTRUCT(BlueprintType)
+struct PROJECTNAME_API FSkeletalMeshMergeParams
+{
+    GENERATED_BODY()
+        FSkeletalMeshMergeParams()
     {
-        return InMesh == nullptr;
-    });
-    if (MeshesToMergeCopy.Num() <= 1)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Must provide multiple valid Skeletal Meshes in order to perform a merge."));
-        return nullptr;
+        StripTopLODS = 0;
+        bNeedsCpuAccess = false;
+        bSkeletonBefore = false;
+        Skeleton = nullptr;
     }
-    EMeshBufferAccess BufferAccess = Params.bNeedsCpuAccess ?
-        EMeshBufferAccess::ForceCPUAndGPU :
-        EMeshBufferAccess::Default;
-    TArray<FSkelMeshMergeSectionMapping> SectionMappings;
-    TArray<FSkelMeshMergeUVTransforms> UvTransforms;
-    ToMergeParams(Params.MeshSectionMappings, SectionMappings);
-    ToMergeParams(Params.UVTransformsPerMesh, UvTransforms);
-    bool bRunDuplicateCheck = false;
-    USkeletalMesh* BaseMesh = NewObject<USkeletalMesh>();
-    if (Params.Skeleton && Params.bSkeletonBefore)
-    {
-        BaseMesh->Skeleton = Params.Skeleton;
-        bRunDuplicateCheck = true;
-        for (USkeletalMeshSocket* Socket : BaseMesh->GetMeshOnlySocketList())
-        {
-            if (Socket)
-            {
-                UE_LOG(LogTemp, Warning, TEXT("SkelMeshSocket: %s"), *(Socket->SocketName.ToString()));
-            }
-        }
-        for (USkeletalMeshSocket* Socket : BaseMesh->Skeleton->Sockets)
-        {
-            if (Socket)
-            {
-                UE_LOG(LogTemp, Warning, TEXT("SkelSocket: %s"), *(Socket->SocketName.ToString()));
-            }
-        }
-    }
-    FSkeletalMeshMerge Merger(BaseMesh, MeshesToMergeCopy, SectionMappings, Params.StripTopLODS, BufferAccess, UvTransforms.GetData());
-    if (!Merger.DoMerge())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Merge failed!"));
-        return nullptr;
-    }
-    if (Params.Skeleton && !Params.bSkeletonBefore)
-    {
-        BaseMesh->Skeleton = Params.Skeleton;
-    }
-    if (bRunDuplicateCheck)
-    {
-        TArray<FName> SkelMeshSockets;
-        TArray<FName> SkelSockets;
-        for (USkeletalMeshSocket* Socket : BaseMesh->GetMeshOnlySocketList())
-        {
-            if (Socket)
-            {
-                SkelMeshSockets.Add(Socket->GetFName());
-                UE_LOG(LogTemp, Warning, TEXT("SkelMeshSocket: %s"), *(Socket->SocketName.ToString()));
-            }
-        }
-        for (USkeletalMeshSocket* Socket : BaseMesh->Skeleton->Sockets)
-        {
-            if (Socket)
-            {
-                SkelSockets.Add(Socket->GetFName());
-                UE_LOG(LogTemp, Warning, TEXT("SkelSocket: %s"), *(Socket->SocketName.ToString()));
-            }
-        }
-        TSet<FName> UniqueSkelMeshSockets;
-        TSet<FName> UniqueSkelSockets;
-        UniqueSkelMeshSockets.Append(SkelMeshSockets);
-        UniqueSkelSockets.Append(SkelSockets);
-        int32 Total = SkelSockets.Num() + SkelMeshSockets.Num();
-        int32 UniqueTotal = UniqueSkelMeshSockets.Num() + UniqueSkelSockets.Num();
-        UE_LOG(LogTemp, Warning, TEXT("SkelMeshSocketCount: %d | SkelSocketCount: %d | Combined: %d"), SkelMeshSockets.Num(), SkelSockets.Num(), Total);
-        UE_LOG(LogTemp, Warning, TEXT("SkelMeshSocketCount: %d | SkelSocketCount: %d | Combined: %d"), UniqueSkelMeshSockets.Num(), UniqueSkelSockets.Num(), UniqueTotal);
-        UE_LOG(LogTemp, Warning, TEXT("Found Duplicates: %s"), *((Total != UniqueTotal) ? FString("True") : FString("False")));
-    }
-    return BaseMesh;
-}
+    // An optional array to map sections from the source meshes to merged section entries
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+        TArray < FSkelMeshMergeSectionMapping_BP > MeshSectionMappings;
+    // An optional array to transform the UVs in each mesh
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+        TArray < FSkelMeshMergeUVTransformMapping > UVTransformsPerMesh;
+    // The list of skeletal meshes to merge.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+        TArray < USkeletalMesh* > MeshesToMerge;
+    // The number of high LODs to remove from input meshes
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+        int32 StripTopLODS;
+    // Whether or not the resulting mesh needs to be accessed by the CPU for any reason (e.g. for spawning particle effects).
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+        uint32 bNeedsCpuAccess : 1;
+    // Update skeleton before merge. Otherwise, update after.
+    // Skeleton must also be provided.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+        uint32 bSkeletonBefore : 1;
+    // Skeleton that will be used for the merged mesh.
+    // Leave empty if the generated skeleton is OK.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+        class USkeleton* Skeleton;
+};
+/**
+*
+*/
+UCLASS()
+class PROJECTNAME_API UMeshMergeFunctionLibrary : public UBlueprintFunctionLibrary
+{
+    GENERATED_BODY()
+public:
+    /**
+    * Merges the given meshes into a single mesh.
+    * @return The merged mesh (will be invalid if the merge failed).
+    */
+    UFUNCTION(BlueprintCallable, Category = "Mesh Merge", meta = (UnsafeDuringActorConstruction = "true"))
+        static class USkeletalMesh* MergeMeshes(const FSkeletalMeshMergeParams& Params);
+};
